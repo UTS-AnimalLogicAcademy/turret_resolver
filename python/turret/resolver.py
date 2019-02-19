@@ -175,6 +175,8 @@ def uri_to_filepath(uri):
     asset_time = fields.get('time')
     platform = fields.get('platform')
 
+    fields.setdefault('LODName', 'LOD0')
+
     # can't remember if it's necessary to do this, now we have a shared install?
     if proj:
         if proj != _resolver.proj:
