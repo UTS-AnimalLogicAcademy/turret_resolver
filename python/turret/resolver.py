@@ -256,15 +256,6 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     """
     _resolver = _Resolver()
 
-    templ = _resolver.tank.template_from_path(filepath)
-
-    if not templ:
-        print "Couldnt find template"
-        return
-
-    fields = templ.get_fields(filepath)
-    fields['version'] = version_flag
-
     install_ = _resolver.sg_info['install']
 
     for key in install_:
@@ -274,9 +265,20 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
             break
 
     # can't remember if it's necessary to do this, now we have a shared install?
+    # It is necessary becahse $DEFAULT_PROJECT is s118
     if proj != _resolver.proj:
+        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
         _resolver.proj = proj
         _resolver.load_tank()
+
+    templ = _resolver.tank.template_from_path(filepath)
+
+    if not templ:
+        print "Couldnt find template"
+        return
+
+    fields = templ.get_fields(filepath)
+    fields['version'] = version_flag
 
     query = urllib.urlencode(fields)
     uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
