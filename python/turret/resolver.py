@@ -284,6 +284,59 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
     return uri
 
+def filepath_to_template(filepath):
+    _resolver = _Resolver()
+
+    install_ = _resolver.sg_info['install']
+
+    for key in install_:
+        value = install_[key]
+        if filepath.startswith(value):
+            proj = key
+            break
+
+    if proj != _resolver.proj:
+        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
+        _resolver.proj = proj
+        _resolver.load_tank()
+
+    return _resolver.tank.template_from_path(filepath)
+
+def template_from_name(name, proj="s119"):
+    _resolver = _Resolver()
+
+    if proj != _resolver.proj:
+        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
+        _resolver.proj = proj
+        _resolver.load_tank()
+
+    print _resolver.tank.templates
+    print _resolver.tank.templates.get(name)
+    return _resolver.tank.templates.get(name)
+
+def filepath_to_fields(filepath):
+    _resolver = _Resolver()
+
+    install_ = _resolver.sg_info['install']
+
+    for key in install_:
+        value = install_[key]
+        if filepath.startswith(value):
+            proj = key
+            break
+
+    if proj != _resolver.proj:
+        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
+        _resolver.proj = proj
+        _resolver.load_tank()
+
+    templ = _resolver.tank.template_from_path(filepath)
+
+    if not templ:
+        print "Couldnt find template"
+        return
+
+    return templ.get_fields(filepath)
 
 def fields_to_uri(templ_name, fields):
     """
