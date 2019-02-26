@@ -314,6 +314,7 @@ def template_from_name(name, proj="s119"):
     print _resolver.tank.templates.get(name)
     return _resolver.tank.templates.get(name)
 
+
 def filepath_to_fields(filepath):
     _resolver = _Resolver()
 
@@ -338,7 +339,8 @@ def filepath_to_fields(filepath):
 
     return templ.get_fields(filepath)
 
-def fields_to_uri(templ_name, fields):
+
+def fields_to_uri(proj, templ_name, fields):
     """
 
     Args:
@@ -349,7 +351,7 @@ def fields_to_uri(templ_name, fields):
 
     """
     query = urllib.urlencode(fields)
-    uri = 'tank:/%s?%s' % (templ_name, query)
+    uri = 'tank:/%s/%s?%s' % (proj, templ_name, query)
     return uri
 
 
