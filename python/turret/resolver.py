@@ -285,7 +285,7 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     return uri
 
 
-def filepath_to_template(filepath, proj=""):
+def filepath_to_template(filepath):
     _resolver = _Resolver()
 
     install_ = _resolver.sg_info['install']
