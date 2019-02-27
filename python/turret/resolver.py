@@ -284,10 +284,12 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
     return uri
 
+
 def filepath_to_template(filepath):
     _resolver = _Resolver()
 
     install_ = _resolver.sg_info['install']
+    proj = ''
 
     for key in install_:
         value = install_[key]
@@ -301,6 +303,30 @@ def filepath_to_template(filepath):
         _resolver.load_tank()
 
     return _resolver.tank.template_from_path(filepath)
+
+
+def uri_to_template(uri):
+    path = urlparse(uri).path.split('/')
+
+    # support old uris where proj is not in path:
+    if len(path) == 2:
+        return str(path[1])
+
+    return str(path[2])
+
+
+def uri_to_fields(uri):
+    uri_tokens = urlparse(uri)
+    query = uri_tokens.query
+    query_tokens = query.split('&')
+    fields = {}
+
+    for field in query_tokens:
+        key, value = field.split('=')
+        fields[key] = value
+
+    return fields
+
 
 def template_from_name(name, proj="s119"):
     _resolver = _Resolver()
