@@ -28,6 +28,10 @@ ZMQ_NULL_RESULT = "NOT_FOUND"
 VERBOSE = False
 
 
+# dodgy logging env var until we iron out asset time bugs:
+TURRET_DEBUG_LOGGING = os.getenv('TURRET_DEBUG_LOGGING')
+
+
 class _Resolver(object):
     path_var_regex = r'[$]{1}[A-Z_]*'
     version_regex = r'v[0-9]{3}'
@@ -211,13 +215,27 @@ def uri_to_filepath(uri):
     # asset time was specified
     if asset_time:
         asset_time = float(asset_time)
+
+        if TURRET_DEBUG_LOGGING:
+            from pprint import pprint
+            pprint(publishes)
+            print '\n'
+
         while len(publishes) > 0:
             latest = publishes.pop()
+
+            if TURRET_DEBUG_LOGGING:
+                print 0.4, latest, '\n'
+
             latest_time = os.path.getmtime(latest)
+
+            if TURRET_DEBUG_LOGGING:
+                print 0.5, latest_time, asset_time, '\n'
 
             # handle rounding issues - apparently this happens:
             if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
                 result = latest
+                break
 
         if not result:
             result = ZMQ_NULL_RESULT
