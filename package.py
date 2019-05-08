@@ -2,7 +2,7 @@
 
 name = 'turret_resolver'
 
-version = '0.2.1'
+version = '0.2.2'
 
 authors = ['wen.tan',
            'ben.skinner',
@@ -12,3 +12,4 @@ build_requires = ['python']
 
 def commands():
     env.PYTHONPATH.append('{root}/python')
+    env.RESOLVE.set("{root}/bin/turret-resolver.sh")
