@@ -27,7 +27,6 @@ VERSION_REGEX = r'v[0-9]{3}'
 ZMQ_NULL_RESULT = "NOT_FOUND"
 VERBOSE = False
 
-
 # dodgy logging env var until we iron out asset time bugs:
 TURRET_DEBUG_LOGGING = os.getenv('TURRET_DEBUG_LOGGING')
 
@@ -106,10 +105,12 @@ class _Resolver(object):
 
         if self.sgtk.get_authenticated_user():
             if not self.sgtk.get_authenticated_user().are_credentials_expired():
-                print "Credentials already exist."
+                if VERBOSE:
+                    print "Credentials already exist."
                 return
 
-        print "Authenticating credentials."
+        if VERBOSE:
+            print "Authenticating credentials."
 
         # Import the ShotgunAuthenticator from the tank_vendor.shotgun_authentication
         # module. This class allows you to authenticate either interactively or, in this
@@ -192,16 +193,16 @@ def uri_to_filepath(uri):
     if VERBOSE:
         print("tank uri resolver found sgtk template: %s\n" % template_path)
 
-    if not version:
-        return None
-
     result = ""
     fields_ = {}
     for key in fields:
         if key == 'version':
-            continue
-        fields_[key] = fields[key]
-
+            if fields[key] == 'latest':
+                continue
+            fields_[key] = int(fields[key])
+        else:
+            fields_[key] = fields[key]
+    
     publishes = _resolver.tank.paths_from_template(template_path, fields_)
 
     if len(publishes) == 0:
