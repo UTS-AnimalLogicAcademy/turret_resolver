@@ -27,10 +27,6 @@ VERSION_REGEX = r'v[0-9]{3}'
 ZMQ_NULL_RESULT = "NOT_FOUND"
 VERBOSE = False
 
-# dodgy logging env var until we iron out asset time bugs:
-TURRET_DEBUG_LOGGING = os.getenv('TURRET_DEBUG_LOGGING')
-
-
 class _Resolver(object):
     path_var_regex = r'[$]{1}[A-Z_]*'
     version_regex = r'v[0-9]{3}'
@@ -183,6 +179,7 @@ def uri_to_filepath(uri):
     fields.setdefault('LODName', 'LOD0')
 
     # can't remember if it's necessary to do this, now we have a shared install?
+    # Precheck is necessary because $DEFAULT_PROJECT is s118
     if proj:
         if proj != _resolver.proj:
             _resolver.proj = proj
@@ -191,7 +188,7 @@ def uri_to_filepath(uri):
     template_path = _resolver.tank.templates[template]
 
     if VERBOSE:
-        print("tank uri resolver found sgtk template: %s\n" % template_path)
+        print("turret_resolver found sgtk template: %s\n" % template_path)
 
     result = ""
     fields_ = {}
@@ -211,13 +208,14 @@ def uri_to_filepath(uri):
     publishes.sort()
 
     if VERBOSE:
-        print "tank uri resolver found publishes: %s\n" % publishes
+        print "turret_resolver found publishes: %s\n" % publishes
 
     # asset time was specified
     if asset_time:
         asset_time = float(asset_time)
 
-        if TURRET_DEBUG_LOGGING:
+        if VERBOSE:
+            print("Asset time arg was specified: {0}".format(asset_time))
             from pprint import pprint
             pprint(publishes)
             print '\n'
@@ -225,13 +223,13 @@ def uri_to_filepath(uri):
         while len(publishes) > 0:
             latest = publishes.pop()
 
-            if TURRET_DEBUG_LOGGING:
-                print 0.4, latest, '\n'
+            if VERBOSE:
+                print("Latest: {0}".format(latest))
 
             latest_time = os.path.getmtime(latest)
 
-            if TURRET_DEBUG_LOGGING:
-                print 0.5, latest_time, asset_time, '\n'
+            if VERBOSE:
+                print("Latest: {0} - Time: {1} - Asset Time Arg: {2}".format(latest, latest_time, asset_time))
 
             # handle rounding issues - apparently this happens:
             if (abs(latest_time - asset_time) < 0.01) or (latest_time < asset_time):
@@ -283,8 +281,7 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
             proj = key
             break
 
-    # can't remember if it's necessary to do this, now we have a shared install?
-    # It is necessary becahse $DEFAULT_PROJECT is s118
+    # Precheck is necessary because $DEFAULT_PROJECT is s118
     if proj != _resolver.proj:
         print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
         _resolver.proj = proj
