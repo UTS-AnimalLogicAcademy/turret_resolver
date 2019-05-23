@@ -178,7 +178,6 @@ def uri_to_filepath(uri):
 
     fields.setdefault('LODName', 'LOD0')
 
-    # can't remember if it's necessary to do this, now we have a shared install?
     # Precheck is necessary because $DEFAULT_PROJECT is s118
     if proj:
         if proj != _resolver.proj:
