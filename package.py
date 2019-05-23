@@ -2,7 +2,7 @@
 
 name = 'turret_resolver'
 
-version = '0.2.4'
+version = '1.1.0'
 
 authors = ['wen.tan',
            'ben.skinner',
