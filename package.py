@@ -2,13 +2,13 @@
 
 name = 'turret_resolver'
 
-version = '1.1.2'
+version = '1.1.3'
 
 authors = ['wen.tan',
            'ben.skinner',
            'daniel.flood']
 
-requires = ['python']
+build_requires = ['python']
 
 def commands():
     env.PYTHONPATH.append('{root}/python')
