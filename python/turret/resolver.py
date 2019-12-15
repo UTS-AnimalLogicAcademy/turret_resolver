@@ -27,15 +27,15 @@ VERSION_REGEX = r'v[0-9]{3}'
 ZMQ_NULL_RESULT = "NOT_FOUND"
 VERBOSE = False
 
-class _Resolver(object):
+class SgtkBootstrap(object):
     path_var_regex = r'[$]{1}[A-Z_]*'
     version_regex = r'v[0-9]{3}'
     zmq_null_result = "NOT_FOUND"
     verbose = False
     _instance = None
 
-    def __init__(self):
-        self.proj = os.getenv('DEFAULT_PROJECT')
+    def __init__(self, proj=proj):
+        self.proj = proj or os.getenv('DEFAULT_PROJECT')
         self.sgtk = None
         self.sg_info = None
         self.tank = None
@@ -44,7 +44,7 @@ class _Resolver(object):
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(_Resolver, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(SgtkBootstrap, cls).__new__(cls, *args, **kwargs)
         return cls._instance
 
     def setup(self):
@@ -131,7 +131,7 @@ class _Resolver(object):
 
 
 def authenticate():
-    _Resolver()
+    SgtkBootstrap()
 
 
 def uri_to_filepath(uri):
@@ -143,7 +143,7 @@ def uri_to_filepath(uri):
     Returns:
 
     """
-    _resolver = _Resolver()
+    sgtkBootstrap = SgtkBootstrap()
 
     # this is necessary for katana - for some reason katana ships with it's own
     # modified version of urlparse which only works for some protocols, so switch
@@ -180,11 +180,11 @@ def uri_to_filepath(uri):
 
     # Precheck is necessary because $DEFAULT_PROJECT is s118
     if proj:
-        if proj != _resolver.proj:
-            _resolver.proj = proj
-            _resolver.load_tank()
+        if proj != sgtkBootstrap.proj:
+            sgtkBootstrap.proj = proj
+            sgtkBootstrap.load_tank()
 
-    template_path = _resolver.tank.templates[template]
+    template_path = sgtkBootstrap.tank.templates[template]
 
     if VERBOSE:
         print("turret_resolver found sgtk template: %s\n" % template_path)
@@ -199,7 +199,7 @@ def uri_to_filepath(uri):
         else:
             fields_[key] = fields[key]
     
-    publishes = _resolver.tank.paths_from_template(template_path, fields_)
+    publishes = sgtkBootstrap.tank.paths_from_template(template_path, fields_)
 
     if len(publishes) == 0:
         return ZMQ_NULL_RESULT
@@ -246,8 +246,8 @@ def uri_to_filepath(uri):
         # currently we assume the turret server is running on linux, so
         # the retried path will be a linux one
 
-        win_platform = _resolver.sg_info['platform']['windows']
-        lin_platform = _resolver.sg_info['platform']['linux']
+        win_platform = sgtkBootstrap.sg_info['platform']['windows']
+        lin_platform = sgtkBootstrap.sg_info['platform']['linux']
 
         # there may be a better way to do this, without accessing a private member?
         windows_root = template_path._per_platform_roots[win_platform]
@@ -270,9 +270,9 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     Returns:
 
     """
-    _resolver = _Resolver()
+    sgtkBootstrap = SgtkBootstrap()
 
-    install_ = _resolver.sg_info['install']
+    install_ = sgtkBootstrap.sg_info['install']
 
     for key in install_:
         value = install_[key]
@@ -281,12 +281,12 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
             break
 
     # Precheck is necessary because $DEFAULT_PROJECT is s118
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
+    if proj != sgtkBootstrap.proj:
+        print "Changing active tank project from {0} to {1} ".format(sgtkBootstrap.proj, proj)
+        sgtkBootstrap.proj = proj
+        sgtkBootstrap.load_tank()
 
-    templ = _resolver.tank.template_from_path(filepath)
+    templ = sgtkBootstrap.tank.template_from_path(filepath)
 
     if not templ:
         print "Couldnt find template"
@@ -301,9 +301,9 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
 
 
 def filepath_to_template(filepath):
-    _resolver = _Resolver()
+    sgtkBootstrap = SgtkBootstrap()
 
-    install_ = _resolver.sg_info['install']
+    install_ = sgtkBootstrap.sg_info['install']
     proj = ''
 
     for key in install_:
@@ -312,12 +312,12 @@ def filepath_to_template(filepath):
             proj = key
             break
 
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
+    if proj != sgtkBootstrap.proj:
+        print "Changing active tank project from {0} to {1} ".format(sgtkBootstrap.proj, proj)
+        sgtkBootstrap.proj = proj
+        sgtkBootstrap.load_tank()
 
-    return _resolver.tank.template_from_path(filepath)
+    return sgtkBootstrap.tank.template_from_path(filepath)
 
 
 def uri_to_template(uri):
@@ -344,22 +344,22 @@ def uri_to_fields(uri):
 
 
 def template_from_name(name, proj="s119"):
-    _resolver = _Resolver()
+    sgtkBootstrap = SgtkBootstrap()
 
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
+    if proj != sgtkBootstrap.proj:
+        print "Changing active tank project from {0} to {1} ".format(sgtkBootstrap.proj, proj)
+        sgtkBootstrap.proj = proj
+        sgtkBootstrap.load_tank()
 
-    print _resolver.tank.templates
-    print _resolver.tank.templates.get(name)
-    return _resolver.tank.templates.get(name)
+    print sgtkBootstrap.tank.templates
+    print sgtkBootstrap.tank.templates.get(name)
+    return sgtkBootstrap.tank.templates.get(name)
 
 
 def filepath_to_fields(filepath):
-    _resolver = _Resolver()
+    sgtkBootstrap = SgtkBootstrap()
 
-    install_ = _resolver.sg_info['install']
+    install_ = sgtkBootstrap.sg_info['install']
 
     for key in install_:
         value = install_[key]
@@ -367,12 +367,12 @@ def filepath_to_fields(filepath):
             proj = key
             break
 
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
+    if proj != sgtkBootstrap.proj:
+        print "Changing active tank project from {0} to {1} ".format(sgtkBootstrap.proj, proj)
+        sgtkBootstrap.proj = proj
+        sgtkBootstrap.load_tank()
 
-    templ = _resolver.tank.template_from_path(filepath)
+    templ = sgtkBootstrap.tank.template_from_path(filepath)
 
     if not templ:
         print "Couldnt find template"
