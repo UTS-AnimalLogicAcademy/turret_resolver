@@ -34,8 +34,8 @@ class SgtkBootstrap(object):
     verbose = False
     _instance = None
 
-    def __init__(self):
-        self.proj = os.getenv('DEFAULT_PROJECT')
+    def __init__(self, proj=proj):
+        self.proj = proj or os.getenv('DEFAULT_PROJECT')
         self.sgtk = None
         self.sg_info = None
         self.tank = None
