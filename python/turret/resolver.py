@@ -35,10 +35,8 @@ class _Resolver(object):
     _instance = None
 
     def __init__(self):
-        # self.proj = os.getenv('DEFAULT_PROJECT')
         self.sgtk = None
         self.sg_info = None
-        # self.tank = None
         self.tank_cache = {}
 
         self.setup()
@@ -60,8 +58,9 @@ class _Resolver(object):
         self.authenticate()
 
         # tank object comes last:
-        self.add_tank(os.getenv('DEFAULT_PROJECT'))
-
+        default_projct = os.getenv('DEFAULT_PROJECT')
+        if default_projct:
+            self.add_tank(default_projct)
 
     def add_tank(self, proj_name):
         """
@@ -181,11 +180,8 @@ def uri_to_filepath(uri):
 
     fields.setdefault('LODName', 'LOD0')
 
-    print 1, proj, 2
-
     # Precheck is necessary because $DEFAULT_PROJECT is s118
     if not proj in resolver.tank_cache:
-        print 3
         resolver.add_tank(proj)
 
     tank = resolver.tank_cache[proj]
