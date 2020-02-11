@@ -35,10 +35,9 @@ class _Resolver(object):
     _instance = None
 
     def __init__(self):
-        self.proj = os.getenv('DEFAULT_PROJECT')
         self.sgtk = None
         self.sg_info = None
-        self.tank = None
+        self.tank_cache = {}
 
         self.setup()
 
@@ -59,18 +58,22 @@ class _Resolver(object):
         self.authenticate()
 
         # tank object comes last:
-        self.tank_ = self.load_tank()
+        default_projct = os.getenv('DEFAULT_PROJECT')
+        if default_projct:
+            self.add_tank(default_projct)
 
-    def load_tank(self):
+    def add_tank(self, proj_name):
         """
-
         Returns:
-
         """
-        proj_name = self.proj or os.getenv('DEFAULT_PROJECT')
+        if self.tank_cache.has_key(proj_name):
+            return
+
         proj_install = self.sg_info['install']
-        proj = proj_install[proj_name]
-        self.tank = self.sgtk.tank_from_path(proj)
+        proj_path = proj_install[proj_name]
+        proj_tank = self.sgtk.tank_from_path(proj_path)
+
+        self.tank_cache[proj_name] = proj_tank
 
     def import_sgtk(self):
         """
@@ -143,7 +146,7 @@ def uri_to_filepath(uri):
     Returns:
 
     """
-    _resolver = _Resolver()
+    resolver = _Resolver()
 
     # this is necessary for katana - for some reason katana ships with it's own
     # modified version of urlparse which only works for some protocols, so switch
@@ -172,19 +175,18 @@ def uri_to_filepath(uri):
         key, value = field.split('=')
         fields[key] = value
 
-    version = fields.get('version')
     asset_time = fields.get('time')
     platform = fields.get('platform')
 
     fields.setdefault('LODName', 'LOD0')
 
     # Precheck is necessary because $DEFAULT_PROJECT is s118
-    if proj:
-        if proj != _resolver.proj:
-            _resolver.proj = proj
-            _resolver.load_tank()
+    if not proj in resolver.tank_cache:
+        resolver.add_tank(proj)
 
-    template_path = _resolver.tank.templates[template]
+    tank = resolver.tank_cache[proj]
+
+    template_path = tank.templates[template]
 
     if VERBOSE:
         print("turret_resolver found sgtk template: %s\n" % template_path)
@@ -199,7 +201,7 @@ def uri_to_filepath(uri):
         else:
             fields_[key] = fields[key]
     
-    publishes = _resolver.tank.paths_from_template(template_path, fields_)
+    publishes = tank.paths_from_template(template_path, fields_)
 
     if len(publishes) == 0:
         return ZMQ_NULL_RESULT
@@ -246,8 +248,8 @@ def uri_to_filepath(uri):
         # currently we assume the turret server is running on linux, so
         # the retried path will be a linux one
 
-        win_platform = _resolver.sg_info['platform']['windows']
-        lin_platform = _resolver.sg_info['platform']['linux']
+        win_platform = resolver.sg_info['platform']['windows']
+        lin_platform = resolver.sg_info['platform']['linux']
 
         # there may be a better way to do this, without accessing a private member?
         windows_root = template_path._per_platform_roots[win_platform]
@@ -257,67 +259,6 @@ def uri_to_filepath(uri):
         result = result.replace('/', '\\')
 
     return result
-
-
-def filepath_to_uri(filepath, version_flag="latest", proj=""):
-    """
-
-    Args:
-        filepath:
-        version_flag:
-        proj:
-
-    Returns:
-
-    """
-    _resolver = _Resolver()
-
-    install_ = _resolver.sg_info['install']
-
-    for key in install_:
-        value = install_[key]
-        if filepath.startswith(value):
-            proj = key
-            break
-
-    # Precheck is necessary because $DEFAULT_PROJECT is s118
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
-
-    templ = _resolver.tank.template_from_path(filepath)
-
-    if not templ:
-        print "Couldnt find template"
-        return
-
-    fields = templ.get_fields(filepath)
-    fields['version'] = version_flag
-
-    query = urllib.urlencode(fields)
-    uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
-    return uri
-
-
-def filepath_to_template(filepath):
-    _resolver = _Resolver()
-
-    install_ = _resolver.sg_info['install']
-    proj = ''
-
-    for key in install_:
-        value = install_[key]
-        if filepath.startswith(value):
-            proj = key
-            break
-
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
-
-    return _resolver.tank.template_from_path(filepath)
 
 
 def uri_to_template(uri):
@@ -343,36 +284,44 @@ def uri_to_fields(uri):
     return fields
 
 
-def template_from_name(name, proj="s119"):
-    _resolver = _Resolver()
+def filepath_to_uri(filepath, version_flag="latest", proj=""):
+    """
 
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
+    Args:
+        filepath:
+        version_flag:
+        proj:
 
-    print _resolver.tank.templates
-    print _resolver.tank.templates.get(name)
-    return _resolver.tank.templates.get(name)
+    Returns:
+
+    """
+    tank = get_tank(filepath)
+
+    templ = tank.template_from_path(filepath)
+
+    if not templ:
+        print "Couldnt find template"
+        return
+
+    fields = templ.get_fields(filepath)
+    fields['version'] = version_flag
+    query = urllib.urlencode(fields)
+
+    if not proj:
+        proj = os.getenv('DEFAULT_PROJECT')
+
+    uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
+    return uri
+
+
+def filepath_to_template(filepath):
+    tank = get_tank(filepath)
+    return tank.template_from_path(filepath)
 
 
 def filepath_to_fields(filepath):
-    _resolver = _Resolver()
-
-    install_ = _resolver.sg_info['install']
-
-    for key in install_:
-        value = install_[key]
-        if filepath.startswith(value):
-            proj = key
-            break
-
-    if proj != _resolver.proj:
-        print "Changing active tank project from {0} to {1} ".format(_resolver.proj, proj)
-        _resolver.proj = proj
-        _resolver.load_tank()
-
-    templ = _resolver.tank.template_from_path(filepath)
+    tank = get_tank(filepath)
+    templ = tank.template_from_path(filepath)
 
     if not templ:
         print "Couldnt find template"
@@ -409,3 +358,33 @@ def is_tank_asset(filepath, tk):
     templ = tk.template_from_path(filepath)
     return True if templ else False
 
+
+def template_from_name(proj, name):
+    resolver = _Resolver()
+    if not resolver.tank_cache.has_key(proj):
+        resolver.add_tank(proj)
+    tank = resolver.tank_cache[proj]
+
+    return tank.templates.get(name)
+
+
+def get_tank(filepath):
+    resolver = _Resolver()
+
+    install_ = resolver.sg_info['install']
+
+    proj = None
+
+    for key in install_:
+        value = install_[key]
+        if filepath.startswith(value):
+            proj = key
+            break
+
+    if not proj:
+        print "filepath does not belong to any known project"
+        return
+
+    if not resolver.tank_cache.has_key(proj):
+        resolver.add_tank(proj)
+    return resolver.tank_cache[proj]
