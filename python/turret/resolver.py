@@ -284,7 +284,7 @@ def uri_to_fields(uri):
     return fields
 
 
-def filepath_to_uri(filepath, version_flag="latest", proj=""):
+def filepath_to_uri(filepath, version_flag="latest"):
     """
 
     Args:
@@ -295,7 +295,7 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     Returns:
 
     """
-    tank = get_tank(filepath)
+    tank, proj = get_tank_and_proj(filepath)
 
     templ = tank.template_from_path(filepath)
 
@@ -307,20 +307,17 @@ def filepath_to_uri(filepath, version_flag="latest", proj=""):
     fields['version'] = version_flag
     query = urllib.urlencode(fields)
 
-    if not proj:
-        proj = os.getenv('DEFAULT_PROJECT')
-
     uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
     return uri
 
 
 def filepath_to_template(filepath):
-    tank = get_tank(filepath)
+    tank, proj = get_tank_and_proj(filepath)
     return tank.template_from_path(filepath)
 
 
 def filepath_to_fields(filepath):
-    tank = get_tank(filepath)
+    tank, proj = get_tank_and_proj(filepath)
     templ = tank.template_from_path(filepath)
 
     if not templ:
@@ -368,7 +365,10 @@ def template_from_name(proj, name):
     return tank.templates.get(name)
 
 
-def get_tank(filepath):
+def get_tank_and_proj(filepath):
+    """
+    :return: tank, proj
+    """
     resolver = _Resolver()
 
     install_ = resolver.sg_info['install']
@@ -387,4 +387,4 @@ def get_tank(filepath):
 
     if not resolver.tank_cache.has_key(proj):
         resolver.add_tank(proj)
-    return resolver.tank_cache[proj]
+    return resolver.tank_cache[proj], proj
