@@ -198,6 +198,12 @@ def uri_to_filepath(uri):
             if fields[key] == 'latest':
                 continue
             fields_[key] = int(fields[key])
+
+        # temporarily implement this fix here until new model publishes take effect:
+        if key == 'Task':
+            if fields[key] == 'lookfiles':
+                fields_[key] = 'textures'
+
         else:
             fields_[key] = fields[key]
     
