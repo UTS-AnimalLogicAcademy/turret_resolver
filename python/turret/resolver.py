@@ -377,15 +377,32 @@ def get_tank_and_proj(filepath):
     """
     resolver = _Resolver()
 
-    install_ = resolver.sg_info['install']
-
     proj = None
 
-    for key in install_:
-        value = install_[key]
-        if filepath.startswith(value):
-            proj = key
-            break
+    # v2.1.0 uses an improved $SHOTGUN_INFO json file which accomodates
+    # multiple roots for the same project.  Previous versions used the config
+    # install location as the single project root, which causes problems if
+    # a schema is used that has multiple roots (i.e. one for WIP and one for
+    # publishes.
+    #
+    # As this is is a new behaviour, preserve compability with prior usage
+    # by checking whether a 'projects_roots' key is defined or not:
+    proj_code = resolver.sg_info.get('project_roots')
+    if proj_code:
+        for key in proj_code:
+            values = proj_code[key]
+            for value in values:
+                if filepath.startswith(value):
+                    proj = key
+                    break
+    # revert to pre v2.1.0 behaviour:
+    else:
+        install_ = resolver.sg_info.get('install')
+        for key in install_:
+            value = install_[key]
+            if filepath.startswith(value):
+                proj = key
+                break
 
     if not proj:
         print "filepath does not belong to any known project"
