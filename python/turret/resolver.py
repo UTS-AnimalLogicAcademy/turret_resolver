@@ -193,20 +193,20 @@ def uri_to_filepath(uri):
 
     result = ""
     fields_ = {}
+
     for key in fields:
         if key == 'version':
             if fields[key] == 'latest':
                 continue
             fields_[key] = int(fields[key])
+        else:
+            fields_[key] = fields[key]
 
         # temporarily implement this fix here until new model publishes take effect:
         if key == 'Task':
             if fields[key] == 'lookfiles':
                 fields_[key] = 'textures'
 
-        else:
-            fields_[key] = fields[key]
-    
     publishes = tank.paths_from_template(template_path, fields_)
 
     if len(publishes) == 0:
