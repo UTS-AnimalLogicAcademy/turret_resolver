@@ -105,11 +105,11 @@ class _Resolver(object):
         if self.sgtk.get_authenticated_user():
             if not self.sgtk.get_authenticated_user().are_credentials_expired():
                 if VERBOSE:
-                    print "Credentials already exist."
+                    print("Credentials already exist.")
                 return
 
         if VERBOSE:
-            print "Authenticating credentials."
+            print("Authenticating credentials.")
 
         # Import the ShotgunAuthenticator from the tank_vendor.shotgun_authentication
         # module. This class allows you to authenticate either interactively or, in this
@@ -215,7 +215,7 @@ def uri_to_filepath(uri):
     publishes.sort()
 
     if VERBOSE:
-        print "turret_resolver found publishes: %s\n" % publishes
+        print("turret_resolver found publishes: %s\n" % publishes)
 
     # asset time was specified
     if asset_time:
@@ -225,7 +225,7 @@ def uri_to_filepath(uri):
             print("Asset time arg was specified: {0}".format(asset_time))
             from pprint import pprint
             pprint(publishes)
-            print '\n'
+            print('\n')
 
         while len(publishes) > 0:
             latest = publishes.pop()
@@ -306,7 +306,7 @@ def filepath_to_uri(filepath, version_flag="latest"):
     templ = tank.template_from_path(filepath)
 
     if not templ:
-        print "Couldnt find template"
+        print("Couldnt find template")
         return
 
     fields = templ.get_fields(filepath)
@@ -327,7 +327,7 @@ def filepath_to_fields(filepath):
     templ = tank.template_from_path(filepath)
 
     if not templ:
-        print "Couldnt find template"
+        print("Couldnt find template")
         return
 
     return templ.get_fields(filepath)
@@ -405,7 +405,7 @@ def get_tank_and_proj(filepath):
                 break
 
     if not proj:
-        print "filepath does not belong to any known project"
+        print("filepath does not belong to any known project")
         return
 
     if not resolver.tank_cache.has_key(proj):
