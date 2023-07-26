@@ -20,7 +20,10 @@ import json
 import sys
 import urllib
 import os
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 PATH_VAR_REGEX =r'[$]{1}[A-Z_]*'
 VERSION_REGEX = r'v[0-9]{3}'
