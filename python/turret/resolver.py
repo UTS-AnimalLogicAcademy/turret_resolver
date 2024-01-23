@@ -18,7 +18,11 @@
 
 import json
 import sys
-import urllib
+
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 import os
 try:
     from urllib.parse import urlparse
@@ -69,7 +73,7 @@ class _Resolver(object):
         """
         Returns:
         """
-        if self.tank_cache.has_key(proj_name):
+        if proj_name in self.tank_cache.keys():
             return
 
         proj_install = self.sg_info['install']
@@ -314,7 +318,7 @@ def filepath_to_uri(filepath, version_flag="latest"):
 
     fields = templ.get_fields(filepath)
     fields['version'] = version_flag
-    query = urllib.urlencode(fields)
+    query = urlencode(fields)
 
     uri = 'tank:/%s/%s?%s' % (proj, templ.name, query)
     return uri
@@ -346,7 +350,7 @@ def fields_to_uri(proj, templ_name, fields):
     Returns:
 
     """
-    query = urllib.urlencode(fields)
+    query = urlencode(fields)
     uri = 'tank:/%s/%s?%s' % (proj, templ_name, query)
     return uri
 
@@ -367,7 +371,7 @@ def is_tank_asset(filepath, tk):
 
 def template_from_name(proj, name):
     resolver = _Resolver()
-    if not resolver.tank_cache.has_key(proj):
+    if proj not in resolver.tank_cache.keys():
         resolver.add_tank(proj)
     tank = resolver.tank_cache[proj]
 
@@ -411,6 +415,6 @@ def get_tank_and_proj(filepath):
         print("filepath does not belong to any known project")
         return
 
-    if not resolver.tank_cache.has_key(proj):
+    if proj not in resolver.tank_cache.keys():
         resolver.add_tank(proj)
     return resolver.tank_cache[proj], proj
