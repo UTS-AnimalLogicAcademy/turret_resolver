@@ -4,9 +4,12 @@ name = 'turret_resolver'
 
 version = '2.1.5'
 
-authors = ['wen.tan',
+authors = [
+           'wen.tan',
            'ben.skinner',
-           'daniel.flood']
+           'daniel.flood',
+           'jonah.newton',
+          ]
 
 build_requires = ['python']
 
